@@ -1,3 +1,4 @@
+
 ## 📖 Descripción
 
 Sistema completo de gestión inmobiliaria que permite a agentes y superadministradores gestionar propiedades y tareas asociadas. El sistema incluye:
@@ -6,6 +7,9 @@ Sistema completo de gestión inmobiliaria que permite a agentes y superadministr
 - **Autorización basada en roles** (superadmin, agent)
 - **Soft deletes** en todas las entidades
 - **Relaciones complejas** entre usuarios, propiedades y tareas
+- **Testing completo** (94.34% de cobertura)
+- **Documentación interactiva** con Swagger
+
 
 ---
 
@@ -38,6 +42,16 @@ Sistema completo de gestión inmobiliaria que permite a agentes y superadministr
   - Superadmin gestiona todas las tareas
   - Asignación automática de tareas
 
+### Características Técnicas
+
+- ✅ **Base de Datos PostgreSQL** con TypeORM
+- ✅ **Seed automático** con datos iniciales
+- ✅ **Validación de datos** con class-validator
+- ✅ **Documentación Swagger** completa con ejemplos
+- ✅ **Soft deletes** en todas las entidades
+
+
+---
 
 ## 📚 Endpoints
 
@@ -91,4 +105,3 @@ Sistema completo de gestión inmobiliaria que permite a agentes y superadministr
 | GET | `/tasks/admin/property/:propertyId` | Tareas por propiedad | superadmin |
 | PUT | `/tasks/admin/:id` | Actualizar cualquier tarea | superadmin |
 | DELETE | `/tasks/admin/:id` | Eliminar cualquier tarea | superadmin |
-

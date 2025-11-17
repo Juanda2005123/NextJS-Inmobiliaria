@@ -70,6 +70,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   //Se puede cambiar, se realiza un auto login para que el usuario no tenga que logearse manualmente despues de registrarse
   const register = async (payload: RegisterDto): Promise<User> => {
+    // Limpiar cualquier sesión anterior antes de registrar
+    authStorage.clear();
+    
     await authService.register(payload);
     const loginResult = await login({ email: payload.email, password: payload.password });
     return loginResult;

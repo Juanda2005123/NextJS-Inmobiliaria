@@ -1,4 +1,6 @@
 import { LoginForm } from '@/features/auth/components';
+import Image from 'next/image';
+import Link from 'next/link';
 
 /**
  * Página de inicio de sesión
@@ -8,21 +10,108 @@ import { LoginForm } from '@/features/auth/components';
  */
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Iniciar sesión
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Accede a tu cuenta de Inmobiliaria
-          </p>
-        </div>
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Background Image */}
+      <div className="absolute inset-0">
+        <Image
+          src="/images/landing/futuristic-buildings.jpg"
+          alt="Edificios de lujo"
+          fill
+          className="object-cover"
+          quality={95}
+          priority
+        />
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900/95 via-gray-900/90 to-gray-900/95"></div>
         
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
-          <LoginForm />
+        {/* Subtle Grid Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
+            backgroundSize: '50px 50px'
+          }}></div>
         </div>
       </div>
+
+      {/* Header */}
+      <header className="relative z-10 px-8 py-6">
+        <Link 
+          href="/"
+          className="inline-flex items-center gap-2 text-white hover:text-gray-300 transition-colors group"
+        >
+          <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          <span className="text-sm tracking-wide">Volver al inicio</span>
+        </Link>
+      </header>
+
+      {/* Login Container */}
+      <div className="relative z-10 min-h-[calc(100vh-88px)] flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          {/* Logo/Brand */}
+          <div className="text-center mb-12">
+            <div className="inline-block mb-6">
+              <div className="text-3xl font-light tracking-tight text-white">
+                Inmobiliaria<span className="font-semibold">.pro</span>
+              </div>
+            </div>
+            <h1 className="text-4xl font-light text-white mb-3 tracking-tight">
+              Bienvenido de nuevo
+            </h1>
+            <p className="text-gray-400 font-light">
+              Ingresa a tu cuenta para continuar
+            </p>
+          </div>
+          
+          {/* Floating Card */}
+          <div className="relative backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-8 sm:p-10">
+            {/* Subtle gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-2xl pointer-events-none"></div>
+            
+            <div className="relative">
+              <LoginForm />
+              
+              {/* Divider */}
+              <div className="relative my-8">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/20"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 text-gray-400 bg-transparent font-light">
+                    ¿No tienes cuenta?
+                  </span>
+                </div>
+              </div>
+
+              {/* Register Link */}
+              <Link
+                href="/auth/register"
+                className="block w-full text-center px-6 py-3 border-2 border-white/30 text-white text-sm tracking-wide hover:bg-white/10 hover:border-white/50 transition-all rounded-md font-light"
+              >
+                CREAR CUENTA NUEVA
+              </Link>
+            </div>
+          </div>
+
+          {/* Footer Links */}
+          <div className="mt-8 text-center">
+            <div className="flex items-center justify-center gap-6 text-sm text-gray-400">
+              <a href="#" className="hover:text-white transition-colors font-light">
+                ¿Olvidaste tu contraseña?
+              </a>
+              <span className="text-gray-600">•</span>
+              <a href="#" className="hover:text-white transition-colors font-light">
+                Ayuda
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Decorative Elements */}
+      <div className="absolute top-1/4 left-10 w-40 h-40 bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-10 w-56 h-56 bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
     </div>
   );
 }
