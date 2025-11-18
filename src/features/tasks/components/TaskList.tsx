@@ -12,7 +12,7 @@ export function TaskList({
   tasks: Task[];
   propertyMap?: Map<string, string>;
   userMap?: Map<string, string>;
-  onToggleStatus?: (id: string, newStatus: Task["status"]) => Promise<void>;
+  onToggleStatus?: (id: string, currentCompleted: boolean) => Promise<void>;
 }) {
   if (!tasks || tasks.length === 0) {
     return <div>No hay tareas.</div>;
