@@ -1,0 +1,77 @@
+name: CI - Tests y Linting
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  test:
+    name: Pruebas Unitarias y de Integración
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [20.x]
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      
+      - name: Instalar dependencias
+        run: npm ci
+      
+      - name: Ejecutar linter
+        run: npm run lint
+      
+      - name: Ejecutar pruebas unitarias
+        run: npm run test:ci
+      
+      - name: Subir reporte de cobertura
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+  e2e:
+    name: Pruebas End-to-End
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+      
+      - name: Instalar dependencias
+        run: npm ci
+      
+      - name: Instalar Playwright Browsers
+        run: npx playwright install --with-deps chromium
+      
+      - name: Ejecutar pruebas E2E
+        run: npm run test:e2e
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'https://real-estate-api-jek0.onrender.com/api' }}
+      
+      - name: Subir reporte de Playwright
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
