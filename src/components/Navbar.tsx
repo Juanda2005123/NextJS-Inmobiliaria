@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useAuth } from '@/features/auth/hooks';
-import { Button, Badge } from '@/shared/components/ui';
-import { 
-  Home, 
-  Building2, 
-  CheckSquare, 
-  User, 
-  Users, 
-  LogOut, 
-  Menu, 
-  X 
-} from 'lucide-react';
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/features/auth/hooks";
+import { Button, Badge } from "@/shared/components/ui";
+import {
+  Home,
+  Building2,
+  CheckSquare,
+  User,
+  Users,
+  LogOut,
+  Menu,
+  X,
+} from "lucide-react";
 
 /**
  * Componente Navbar global
- * 
+ *
  * Características:
  * - Se muestra solo en rutas protegidas
  * - Links diferentes según rol (superadmin tiene link extra "Gestión")
@@ -38,37 +38,38 @@ export function Navbar() {
   // Links base para TODOS los usuarios
   const baseLinks = [
     {
-      href: '/dashboard',
-      label: 'Dashboard',
+      href: "/dashboard",
+      label: "Dashboard",
       icon: Home,
     },
     {
-      href: '/properties',
-      label: 'Propiedades',
+      href: "/properties",
+      label: "Propiedades",
       icon: Building2,
     },
     {
-      href: '/tasks',
-      label: 'Tareas',
+      href: "/dashboard/tasks",
+      label: "Tareas",
       icon: CheckSquare,
     },
     {
-      href: '/profile',
-      label: 'Perfil',
+      href: "/profile",
+      label: "Perfil",
       icon: User,
     },
   ];
 
   // Link EXTRA solo para superadmin
-  const superadminLinks = user.role === 'superadmin' 
-    ? [
-        {
-          href: '/users',
-          label: 'Gestión',
-          icon: Users,
-        },
-      ]
-    : [];
+  const superadminLinks =
+    user.role === "superadmin"
+      ? [
+          {
+            href: "/users",
+            label: "Gestión",
+            icon: Users,
+          },
+        ]
+      : [];
 
   // Combina los links según el rol
   const allLinks = [...baseLinks, ...superadminLinks];
@@ -92,13 +93,14 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo y Brand */}
           <div className="flex items-center">
-            <Link 
-              href="/dashboard" 
+            <Link
+              href="/dashboard"
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
               <Building2 className="w-8 h-8 text-blue-600" />
               <span className="text-xl font-light tracking-tight text-gray-900">
-                Inmobiliaria<span className="font-semibold text-blue-600">.pro</span>
+                Inmobiliaria
+                <span className="font-semibold text-blue-600">.pro</span>
               </span>
             </Link>
           </div>
@@ -116,9 +118,10 @@ export function Navbar() {
                   className={`
                     flex items-center gap-2 px-4 py-2 rounded-md
                     text-sm font-medium transition-colors
-                    ${active 
-                      ? 'bg-gray-900 text-white' 
-                      : 'text-gray-700 hover:bg-gray-100'
+                    ${
+                      active
+                        ? "bg-gray-900 text-white"
+                        : "text-gray-700 hover:bg-gray-100"
                     }
                   `}
                 >
@@ -135,14 +138,14 @@ export function Navbar() {
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                <Badge 
-                  size="sm" 
-                  variant={user.role === 'superadmin' ? 'primary' : 'default'}
+                <Badge
+                  size="sm"
+                  variant={user.role === "superadmin" ? "primary" : "default"}
                 >
                   {user.role}
                 </Badge>
               </div>
-              
+
               {/* Avatar */}
               <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-semibold">
                 {user.name.charAt(0).toUpperCase()}
@@ -182,9 +185,9 @@ export function Navbar() {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                <Badge 
-                  size="sm" 
-                  variant={user.role === 'superadmin' ? 'primary' : 'default'}
+                <Badge
+                  size="sm"
+                  variant={user.role === "superadmin" ? "primary" : "default"}
                 >
                   {user.role}
                 </Badge>
@@ -204,9 +207,10 @@ export function Navbar() {
                   className={`
                     flex items-center gap-3 px-4 py-3 rounded-md
                     text-base font-medium transition-colors
-                    ${active 
-                      ? 'bg-gray-900 text-white' 
-                      : 'text-gray-700 hover:bg-gray-100'
+                    ${
+                      active
+                        ? "bg-gray-900 text-white"
+                        : "text-gray-700 hover:bg-gray-100"
                     }
                   `}
                 >

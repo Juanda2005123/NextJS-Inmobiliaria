@@ -1,103 +1,79 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/features/auth/hooks/useAuth";
-import { PropertyForm } from "@/features/properties/components";
-import { propertyService } from "@/features/properties/services/propertyService";
-import { userService } from "@/features/users/services/userService";
-import { Building2, Home, AlertCircle, Loader2 } from "lucide-react";
-import type {
-  CreatePropertyByAgentDto,
-  CreatePropertyByAdminDto,
-} from "@/features/properties/types";
-import type { User } from "@/features/users/types";
+import { useAuth } from "@/features/auth/hooks";
+import { TaskForm } from "@/features/tasks/components";
+import { taskService } from "@/features/tasks/services";
+import { CheckSquare, ListTodo, AlertCircle, Loader2 } from "lucide-react";
 
-/**
- * Página de creación de propiedades
- *
- * Acceso:
- * - Agentes: Pueden crear propiedades (auto-asignadas a ellos)
- * - Superadmin: Pueden crear propiedades y asignarlas a cualquier agente
- *
- * Características:
- * - Form condicional según rol (agent vs admin)
- * - Carga de lista de agentes para superadmin
- * - Validación y manejo de errores
- * - Redirección a /properties tras éxito
- *
- * Ruta: /properties/create
- */
-export default function CreatePropertyPage() {
+import type { Property } from "@/features/properties/types";
+import { useUsers } from "@/features/users/hooks/useUsers";
+import type {
+  CreateTaskByAgentDto,
+  CreateTaskByAdminDto,
+  UpdateTaskByAgentDto,
+  UpdateTaskByAdminDto,
+} from "@/features/tasks/types";
+import {
+  useAgentProperties,
+  useAdminProperties,
+} from "@/features/properties/hooks";
+
+export default function CreateTaskPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const [agents, setAgents] = useState<User[]>([]);
-  const [isLoadingAgents, setIsLoadingAgents] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  if (!user) return null;
+
+  const isAdmin = user.role === "superadmin";
+
+  // properties: for agent we use useAgentProperties (only their properties)
+  // for admin we use useAdminProperties (all properties)
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const agentPropsResult = !isAdmin
+    ? useAgentProperties()
+    : { properties: [], isLoading: false };
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const adminPropsResult = isAdmin
+    ? useAdminProperties()
+    : { properties: [], isLoading: false };
+  const { users, isLoading: usersLoading } = useUsers();
+
   const [error, setError] = useState<string | null>(null);
 
-  const isAdmin = user?.role === "superadmin";
+  const properties = isAdmin
+    ? adminPropsResult.properties || []
+    : agentPropsResult.properties || [];
+  const agentPropsLoading = isAdmin
+    ? adminPropsResult.isLoading
+    : agentPropsResult.isLoading;
 
-  /**
-   * Cargar lista de agentes (solo para superadmin)
-   */
-  useEffect(() => {
-    if (!isAdmin) return;
-
-    const loadAgents = async () => {
-      setIsLoadingAgents(true);
-      try {
-        const response = await userService.getAll();
-        // Filtrar solo agentes (no incluir superadmins)
-        const agentList = response.users.filter((u) => u.role === "agent");
-        setAgents(agentList);
-      } catch (err) {
-        console.error("Error al cargar agentes:", err);
-        setError("Error al cargar lista de agentes");
-      } finally {
-        setIsLoadingAgents(false);
-      }
-    };
-
-    loadAgents();
-  }, [isAdmin]);
-
-  /**
-   * Manejar creación de propiedad
-   */
   const handleSubmit = async (
-    data: CreatePropertyByAgentDto | CreatePropertyByAdminDto
+    data:
+      | CreateTaskByAgentDto
+      | CreateTaskByAdminDto
+      | UpdateTaskByAgentDto
+      | UpdateTaskByAdminDto
   ) => {
-    setIsSubmitting(true);
     setError(null);
-
     try {
-      if (isAdmin) {
-        // Superadmin crea con ownerId específico
-        await propertyService.createAsAdmin(data as CreatePropertyByAdminDto);
+      if (user.role === "superadmin") {
+        await taskService.createForAdmin(data as CreateTaskByAdminDto);
       } else {
-        // Agente crea (auto-asignada)
-        await propertyService.createAsAgent(data as CreatePropertyByAgentDto);
+        await taskService.createForAgent(data as CreateTaskByAgentDto);
       }
 
-      // Redirigir a lista de propiedades
-      router.push("/properties");
+      router.push("/dashboard/tasks");
     } catch (err: unknown) {
       const e = err as Error;
-      const errorMessage = e?.message || "Error al crear la propiedad";
-      setError(errorMessage);
-    } finally {
-      setIsSubmitting(false);
+      setError((e && e.message) || "Error al crear la tarea");
     }
   };
 
-  /**
-   * Cancelar y volver a lista
-   */
   const handleCancel = () => {
-    router.push("/properties");
+    router.push("/dashboard/tasks");
   };
 
   return (
@@ -115,10 +91,10 @@ export default function CreatePropertyPage() {
             </Link>
             <span className="text-gray-600">/</span>
             <Link
-              href="/properties"
+              href="/dashboard/tasks"
               className="text-gray-400 hover:text-white transition-colors"
             >
-              Propiedades
+              Tareas
             </Link>
             <span className="text-gray-600">/</span>
             <span className="text-white font-medium">Crear</span>
@@ -127,16 +103,16 @@ export default function CreatePropertyPage() {
           {/* Título */}
           <div className="flex items-center gap-4">
             <div className="p-3 bg-white/10 backdrop-blur-sm rounded-xl">
-              <Building2 className="w-8 h-8" />
+              <CheckSquare className="w-8 h-8" />
             </div>
             <div>
               <h1 className="text-4xl font-bold mb-2">
-                {isAdmin ? "Crear Nueva Propiedad" : "Publicar Propiedad"}
+                {isAdmin ? "Crear Nueva Tarea" : "Agregar Tarea"}
               </h1>
               <p className="text-gray-300 text-lg">
                 {isAdmin
-                  ? "Crea y asigna propiedades a cualquier agente"
-                  : "Agrega una nueva propiedad a tu portafolio"}
+                  ? "Crea y asigna tareas a cualquier agente"
+                  : "Agrega una nueva tarea a tu lista"}
               </p>
             </div>
           </div>
@@ -151,11 +127,11 @@ export default function CreatePropertyPage() {
           <div className="bg-gradient-to-r from-gray-50 to-white px-8 py-6 border-b border-gray-200">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-gray-900 rounded-lg">
-                <Home className="w-5 h-5 text-white" />
+                <ListTodo className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  Información de la Propiedad
+                  Información de la Tarea
                 </h2>
                 <p className="text-sm text-gray-600 mt-0.5">
                   Completa todos los campos requeridos
@@ -172,31 +148,32 @@ export default function CreatePropertyPage() {
                 <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <h3 className="text-sm font-semibold text-red-900 mb-1">
-                    Error al crear propiedad
+                    Error al crear tarea
                   </h3>
                   <p className="text-sm text-red-700">{error}</p>
                 </div>
               </div>
             )}
 
-            {/* Loading de agentes (solo admin) */}
-            {isAdmin && isLoadingAgents ? (
+            {/* Loading */}
+            {agentPropsLoading || usersLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
-                <span className="ml-3 text-gray-600">Cargando agentes...</span>
+                <span className="ml-3 text-gray-600">Cargando datos...</span>
               </div>
             ) : (
-              <PropertyForm
-                mode={isAdmin ? "create-admin" : "create-agent"}
-                agents={agents.map((agent) => ({
-                  id: agent.id,
-                  name: agent.name,
-                  email: agent.email,
+              <TaskForm
+                initial={{}}
+                properties={properties.map((p: Property) => ({
+                  id: p.id,
+                  title: p.title,
+                  ownerId: p.ownerId,
                 }))}
+                agents={users.map((u) => ({ id: u.id, name: u.name }))}
                 onSubmit={handleSubmit}
-                isSubmitting={isSubmitting}
-                submitLabel="Crear Propiedad"
                 onCancel={handleCancel}
+                isAdmin={user.role === "superadmin"}
+                isEdit={false}
               />
             )}
           </div>
@@ -208,37 +185,39 @@ export default function CreatePropertyPage() {
             <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
               i
             </div>
-            Consejos para crear una buena propiedad
+            Consejos para crear una buena tarea
           </h3>
           <ul className="space-y-2 text-sm text-blue-800">
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-0.5">•</span>
               <span>
-                <strong>Título claro:</strong> Usa un título descriptivo que
-                destaque la propiedad
+                <strong>Título claro:</strong> Usa un título descriptivo y
+                específico
               </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-0.5">•</span>
               <span>
-                <strong>Descripción completa:</strong> Incluye características,
-                acabados y servicios cercanos
+                <strong>Descripción detallada:</strong> Explica qué debe hacerse
+                y cómo
               </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-0.5">•</span>
               <span>
-                <strong>Precio real:</strong> Establece un precio competitivo
-                basado en el mercado
+                <strong>Fecha límite:</strong> Establece un plazo realista para
+                completarla
               </span>
             </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-600 mt-0.5">•</span>
-              <span>
-                <strong>Ubicación exacta:</strong> Proporciona la dirección
-                completa para facilitar visitas
-              </span>
-            </li>
+            {isAdmin && (
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600 mt-0.5">•</span>
+                <span>
+                  <strong>Asignación:</strong> Asigna al agente más adecuado
+                  para la tarea
+                </span>
+              </li>
+            )}
           </ul>
         </div>
       </div>

@@ -1,14 +1,15 @@
-'use client';
+"use client";
 
-import { use, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { usePropertyDetail } from '@/features/properties/hooks/usePropertyDetail';
-import { PropertyForm } from '@/features/properties/components';
-import { 
-  Building2, 
-  Loader2, 
-  AlertCircle, 
-  Trash2, 
+import { use, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePropertyDetail } from "@/features/properties/hooks/usePropertyDetail";
+import { PropertyForm } from "@/features/properties/components";
+import {
+  Building2,
+  Loader2,
+  AlertCircle,
+  Trash2,
   ArrowLeft,
   MapPin,
   DollarSign,
@@ -18,23 +19,26 @@ import {
   Calendar,
   User,
   AlertTriangle,
-} from 'lucide-react';
-import type { UpdatePropertyByAgentDto, UpdatePropertyByAdminDto } from '@/features/properties/types';
+} from "lucide-react";
+import type {
+  UpdatePropertyByAgentDto,
+  UpdatePropertyByAdminDto,
+} from "@/features/properties/types";
 
 /**
  * Página de edición/eliminación de propiedad
- * 
+ *
  * Acceso:
  * - Agente: Solo puede editar/eliminar sus propias propiedades (ownerId === user.id)
  * - Superadmin: Puede editar/eliminar cualquier propiedad
- * 
+ *
  * Características:
  * - Verificación de permisos con usePropertyDetail
  * - Form con valores iniciales de la propiedad
  * - Vista previa de la propiedad antes del form
  * - Zona de peligro para eliminar (confirmación)
  * - Redirección a /properties tras eliminar
- * 
+ *
  * Ruta: /properties/[id]
  */
 export default function EditPropertyPage({
@@ -44,44 +48,34 @@ export default function EditPropertyPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  
+
   const {
     property,
     canEdit,
     canDelete,
     isLoading,
-    error: loadError,
-    handleSubmit: submitUpdate,
+    error: hookError,
     handleDelete: deleteProperty,
+    updateProperty,
     isSaving,
     isDeleting,
   } = usePropertyDetail(id);
 
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   /**
-   * Manejar envío del formulario
+   * Manejar envío del formulario desde PropertyForm
+   * PropertyForm pasa el DTO directamente (no un evento)
    */
-  const handleFormSubmit = async (data: UpdatePropertyByAgentDto | UpdatePropertyByAdminDto) => {
-    setSubmitError(null);
-    
+  const handleFormSubmit = async (
+    data: UpdatePropertyByAgentDto | UpdatePropertyByAdminDto
+  ) => {
     try {
-      // Crear evento sintético para submitUpdate
-      const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
-      
-      // Actualizar formData interno del hook (no es la forma ideal, pero funciona)
-      // Como no podemos modificar el hook desde aquí, llamaremos directamente al service
-      const { propertyService } = await import('@/features/properties/services/propertyService');
-      const { useAuth } = await import('@/features/auth/hooks/useAuth');
-      
-      // Recargar la página para reflejar cambios
-      await propertyService.updateAsAgent(id, data as UpdatePropertyByAgentDto);
+      await updateProperty(data);
       router.refresh();
-    } catch (err: any) {
-      const errorMessage = err.message || 'Error al actualizar la propiedad';
-      setSubmitError(errorMessage);
+    } catch (err: unknown) {
+      // Error ya manejado por el hook y mostrado en hookError
     }
   };
 
@@ -94,8 +88,9 @@ export default function EditPropertyPage({
     try {
       await deleteProperty();
       // El hook ya redirige a /properties después de eliminar
-    } catch (err: any) {
-      const errorMessage = err.message || 'Error al eliminar la propiedad';
+    } catch (err: unknown) {
+      const e = err as Error;
+      const errorMessage = e?.message || "Error al eliminar la propiedad";
       setDeleteError(errorMessage);
     }
   };
@@ -104,7 +99,7 @@ export default function EditPropertyPage({
    * Volver a lista de propiedades
    */
   const handleBack = () => {
-    router.push('/properties');
+    router.push("/properties");
   };
 
   // Loading state
@@ -120,7 +115,7 @@ export default function EditPropertyPage({
   }
 
   // Error state
-  if (loadError || !property) {
+  if (hookError || !property) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl border border-red-200 p-8 max-w-md w-full">
@@ -131,7 +126,7 @@ export default function EditPropertyPage({
             Error al cargar
           </h2>
           <p className="text-gray-600 text-center mb-6">
-            {loadError || 'No se pudo encontrar la propiedad'}
+            {hookError || "No se pudo encontrar la propiedad"}
           </p>
           <button
             onClick={handleBack}
@@ -185,13 +180,19 @@ export default function EditPropertyPage({
 
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-sm mb-6">
-            <a href="/dashboard" className="text-gray-400 hover:text-white transition-colors">
+            <Link
+              href="/dashboard"
+              className="text-gray-400 hover:text-white transition-colors"
+            >
               Dashboard
-            </a>
+            </Link>
             <span className="text-gray-600">/</span>
-            <a href="/properties" className="text-gray-400 hover:text-white transition-colors">
+            <Link
+              href="/properties"
+              className="text-gray-400 hover:text-white transition-colors"
+            >
               Propiedades
-            </a>
+            </Link>
             <span className="text-gray-600">/</span>
             <span className="text-white font-medium">{property.title}</span>
           </nav>
@@ -229,9 +230,9 @@ export default function EditPropertyPage({
                   <div className="flex-1">
                     <p className="text-xs text-gray-500 mb-0.5">Precio</p>
                     <p className="text-xl font-bold text-gray-900">
-                      {new Intl.NumberFormat('es-CO', {
-                        style: 'currency',
-                        currency: 'COP',
+                      {new Intl.NumberFormat("es-CO", {
+                        style: "currency",
+                        currency: "COP",
                         minimumFractionDigits: 0,
                       }).format(property.price)}
                     </p>
@@ -258,21 +259,27 @@ export default function EditPropertyPage({
                         <Bed className="w-4 h-4 text-purple-600" />
                       </div>
                       <p className="text-xs text-gray-500">Habitaciones</p>
-                      <p className="text-sm font-semibold text-gray-900">{property.bedrooms}</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {property.bedrooms}
+                      </p>
                     </div>
                     <div className="text-center">
                       <div className="p-2 bg-orange-50 rounded-lg mx-auto w-fit mb-1">
                         <Bath className="w-4 h-4 text-orange-600" />
                       </div>
                       <p className="text-xs text-gray-500">Baños</p>
-                      <p className="text-sm font-semibold text-gray-900">{property.bathrooms}</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {property.bathrooms}
+                      </p>
                     </div>
                     <div className="text-center">
                       <div className="p-2 bg-teal-50 rounded-lg mx-auto w-fit mb-1">
                         <Maximize className="w-4 h-4 text-teal-600" />
                       </div>
                       <p className="text-xs text-gray-500">Área</p>
-                      <p className="text-sm font-semibold text-gray-900">{property.area}m²</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {property.area}m²
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -288,7 +295,8 @@ export default function EditPropertyPage({
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <Calendar className="w-4 h-4" />
                     <span>
-                      Creada: {new Date(property.createdAt).toLocaleDateString('es-CO')}
+                      Creada:{" "}
+                      {new Date(property.createdAt).toLocaleDateString("es-CO")}
                     </span>
                   </div>
                 </div>
@@ -310,15 +318,15 @@ export default function EditPropertyPage({
               </div>
 
               <div className="px-8 py-8">
-                {/* Error de submit */}
-                {submitError && (
+                {/* Error de submit (provisto por el hook) */}
+                {hookError && (
                   <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <h3 className="text-sm font-semibold text-red-900 mb-1">
                         Error al actualizar
                       </h3>
-                      <p className="text-sm text-red-700">{submitError}</p>
+                      <p className="text-sm text-red-700">{hookError}</p>
                     </div>
                   </div>
                 )}
@@ -336,7 +344,7 @@ export default function EditPropertyPage({
                   }}
                   onSubmit={handleFormSubmit}
                   isSubmitting={isSaving}
-                  submitLabel={isSaving ? 'Guardando...' : 'Guardar Cambios'}
+                  submitLabel={isSaving ? "Guardando..." : "Guardar Cambios"}
                 />
               </div>
             </div>
@@ -350,7 +358,9 @@ export default function EditPropertyPage({
                       <AlertTriangle className="w-5 h-5 text-red-600" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-semibold text-red-900">Zona de Peligro</h2>
+                      <h2 className="text-xl font-semibold text-red-900">
+                        Zona de Peligro
+                      </h2>
                       <p className="text-sm text-red-700 mt-0.5">
                         Acciones irreversibles
                       </p>
@@ -378,8 +388,9 @@ export default function EditPropertyPage({
                         Eliminar esta propiedad
                       </h3>
                       <p className="text-sm text-gray-600">
-                        Una vez eliminada, esta propiedad no podrá ser recuperada. Esta acción es
-                        permanente y eliminará toda la información asociada.
+                        Una vez eliminada, esta propiedad no podrá ser
+                        recuperada. Esta acción es permanente y eliminará toda
+                        la información asociada.
                       </p>
                     </div>
 
@@ -393,7 +404,11 @@ export default function EditPropertyPage({
                               ¿Estás absolutamente seguro?
                             </h4>
                             <p className="text-sm text-red-700 mb-2">
-                              Se eliminará la propiedad <span className="font-semibold">{property.title}</span> de forma inmediata.
+                              Se eliminará la propiedad{" "}
+                              <span className="font-semibold">
+                                {property.title}
+                              </span>{" "}
+                              de forma inmediata.
                             </p>
                             <p className="text-sm text-red-700">
                               Esta acción no se puede deshacer.
